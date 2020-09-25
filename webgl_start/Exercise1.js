@@ -14,13 +14,32 @@ var gl;
 var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
     aVertexPositionId: -1,
-    aVertexColorId: -1
+    aVertexTextureCoordId: -1,
+    uSampler2DId: -1
 };
+
+// all the parameters for the lena texture
+var woolTexture = {
+    textureObj: {}
+};
+
+function loadTexture() {
+    var image = new Image();
+    // create texture object
+    woolTexture.textureObj = gl.createTexture();
+    image.onload = function() {
+        initTexture(image, woolTexture.textureObj);
+        // make sure to redraw
+        draw()
+    };
+    image.src = "light_blue_wool.png";
+}
 
 // we keep all the parameters for drawing a specific object together
 var rectangleObject = {
     verticeBuffer: -1,
-    colorBuffer: -1
+    colorBuffer: -1,
+    texturePosBuffer: -1
 };
 
 /**
@@ -31,6 +50,7 @@ function startup() {
     var canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
     initGL();
+    loadTexture();
     draw();
 }
 
@@ -56,7 +76,8 @@ function setUpAttributesAndUniforms(){
     "use strict";
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
-    ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor")
+    ctx.aVertexTextureCoordId = gl.getAttribLocation(ctx.shaderProgram, "aVertexTextureCoord");
+    ctx.uSampler2DId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
 }
 
 /**
@@ -66,44 +87,30 @@ function setUpBuffers(){
     "use strict";
 
     rectangleObject.verticeBuffer = gl.createBuffer();
-    rectangleObject.colorBuffer = gl.createBuffer();
+    rectangleObject.texturePosBuffer = gl.createBuffer();
+
 
     var vertices = [
         -0.5,0.5,
         0.5,0.5,
         0.5,-0.5,
         -0.5,-0.5,
-        -0.8,0.2,
-        0.2,0.2,
-        0.2,-0.8,
-        -0.8,-0.8,
-        -0.2,0.8,
-        0.8,0.8,
-        0.8,-0.2,
-        -0.2,-0.2
     ];
 
-    var colors = [
-        0,0,1,1,
-        1,0,0,1,
-        1,1,0,1,
-        0,1,0,1,
-        0,1,0,1,
-        1,1,0,1,
-        1,0,0,1,
-        0,0,1,1,
-        0,1,0,1,
-        1,0,0,1,
-        1,1,0,1,
-        0,0,1,1,
-    ];
+    var texturePos = [
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0
+    ]
 
+    // setup texture buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.texturePosBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texturePos), gl.STATIC_DRAW);
+
+    // setup vertice buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.verticeBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 }
 
 /**
@@ -118,12 +125,14 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.verticeBuffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
 
-    gl.enableVertexAttribArray(ctx.aVertexColorId);
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
-    gl.vertexAttribPointer(ctx.aVertexColorId, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexTextureCoordId);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.texturePosBuffer);
+    gl.vertexAttribPointer(ctx.aVertexTextureCoordId, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLE_FAN, 8,4);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, woolTexture.textureObj);
+    gl.uniform1i(ctx.uSampler2DId, 0)
+
     gl.drawArrays(gl.TRIANGLE_FAN, 0,4);
-    gl.drawArrays(gl.TRIANGLE_FAN, 4,4);
     console.log("done");
 }
