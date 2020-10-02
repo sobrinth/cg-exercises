@@ -18,8 +18,26 @@ let ctx = {
     uColor: -1
 };
 
+let key = {
+    _pressed: {},
+    LEFT: 37,
+    UP: 38,
+    RIGHT: 39,
+    DOWN: 40
+}
 
-let rectangle = -1
+function isDown(keycode) {
+    return key._pressed[keycode];
+}
+
+function onKeydown(event) {
+    key._pressed[event.keyCode] = true;
+    console.log("KeyPressed: " + event.keyCode)
+}
+
+function onKeyup(event) {
+    delete key._pressed[event.keyCode];
+}
 
 /**
  * Startup function to be called when the body is loaded
@@ -29,7 +47,9 @@ function startup() {
     const canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
     initGL();
-    draw();
+    window.addEventListener('keyup', onKeyup, false);
+    window.addEventListener('keydown', onKeydown, false);
+    startGame();
 }
 
 /**
@@ -40,7 +60,6 @@ function initGL() {
     ctx.shaderProgram = loadAndCompileShaders(gl, 'VertexShader.glsl', 'FragmentShader.glsl');
     setUpAttributesAndUniforms();
     setupWorldCoordinates();
-    setupObjects();
     setUpBuffers();
 
     // set the clear color
@@ -68,13 +87,15 @@ function setupWorldCoordinates() {
     gl.uniformMatrix3fv(ctx.uModelMat, false, VariableObject.modelMat)
 }
 
-/**
- * Create and setup all objects
- */
-function setupObjects() {
-    rectangle = new VariableObject();
-    rectangle.position = [150,-150];
-    rectangle.scale = [100,100];
+
+function startGame() {
+    let game = new Game();
+
+    let middleBar = new VariableObject();
+    middleBar.scale = [1, gl.drawingBufferHeight];
+    game.addObject(middleBar);
+
+    game.start();
 }
 /**
  * Setup the buffers to use. If more objects are needed this should be split in a file per object.
@@ -96,15 +117,3 @@ function setUpBuffers(){
 
 }
 
-/**
- * Draw the scene.
- */
-function draw() {
-    "use strict";
-    console.log("Drawing");
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    rectangle.draw();
-
-    console.log("done");
-}
