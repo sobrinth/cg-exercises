@@ -18,16 +18,8 @@ let ctx = {
     uColor: -1
 };
 
-// we keep all the parameters for drawing a specific object together
-let rectangleObject = {
-    verticeBuffer: -1,
-    modelMat: -1
-};
 
-let playerModel = {
-    size: [100, 100],
-    position: [0,0]
-}
+let rectangle = -1
 
 /**
  * Startup function to be called when the body is loaded
@@ -47,6 +39,8 @@ function initGL() {
     "use strict";
     ctx.shaderProgram = loadAndCompileShaders(gl, 'VertexShader.glsl', 'FragmentShader.glsl');
     setUpAttributesAndUniforms();
+    setupWorldCoordinates();
+    setupObjects();
     setUpBuffers();
 
     // set the clear color
@@ -66,33 +60,39 @@ function setUpAttributesAndUniforms(){
     ctx.uModelMat = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
 }
 
+function setupWorldCoordinates() {
+
+    let projMat = mat3.create();
+    mat3.fromScaling(projMat, [2.0/gl.drawingBufferWidth, 2.0/gl.drawingBufferHeight]);
+    gl.uniformMatrix3fv(ctx.uProjMat, false, projMat);
+    gl.uniformMatrix3fv(ctx.uModelMat, false, VariableObject.modelMat)
+}
+
+/**
+ * Create and setup all objects
+ */
+function setupObjects() {
+    rectangle = new VariableObject();
+    rectangle.position = [150,-150];
+    rectangle.scale = [100,100];
+}
 /**
  * Setup the buffers to use. If more objects are needed this should be split in a file per object.
  */
 function setUpBuffers(){
     "use strict";
 
-    rectangleObject.verticeBuffer = gl.createBuffer();
+    VariableObject.buffer = gl.createBuffer();
 
-    var vertices = [
+    let vertices = [
         -0.5, -0.5,
         0.5, -0.5,
         0.5, 0.5,
         -0.5, 0.5
     ]
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.verticeBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, VariableObject.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-    // Set up the world coordinates
-    let projMat = mat3.create();
-    mat3.fromScaling(projMat, [2.0/gl.drawingBufferWidth, 2.0/gl.drawingBufferHeight]);
-
-    rectangleObject.modelMat = mat3.create();
-
-    // set matrices for vertex shader
-    gl.uniformMatrix3fv(ctx.uProjMat, false, projMat);
-    gl.uniformMatrix3fv(ctx.uModelMat, false, rectangleObject.modelMat);
 
 }
 
@@ -104,23 +104,7 @@ function draw() {
     console.log("Drawing");
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // bind an enable Vertice Buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.verticeBuffer);
-    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
-    gl.enableVertexAttribArray(ctx.aVertexPositionId);
-
-    gl.uniform4f(ctx.uColor, 1, 1, 1, 1);
-
-
-    drawElement(playerModel);
-
+    rectangle.draw();
 
     console.log("done");
-}
-
-function drawElement(element) {
-    mat3.fromTranslation(rectangleObject.modelMat, element.position);
-    mat3.scale(rectangleObject.modelMat, rectangleObject.modelMat, element.size);
-    gl.uniformMatrix3fv(ctx.uModelMat, false, rectangleObject.modelMat);
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
