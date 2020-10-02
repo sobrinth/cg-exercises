@@ -2,9 +2,12 @@ class Game {
 
     constructor() {
         this._objects = [];
-        this._player = new Enemy(this);
+        this._player = new Player();
         this._enemy = new Enemy(this);
         this._ball = new Ball(this);
+        this.playerscore = 0;
+        this.enemyscore = 0;
+        this.stop = false;
         // Frametime of the simulation -> 1000/FPS
         this.__MS_PER_UPDATE = 16;
         this._lag = 0.0;
@@ -38,6 +41,9 @@ class Game {
         let elapsedTime = currentTime - this._prevTime;
         this._prevTime = currentTime;
         this._lag += elapsedTime;
+        if(game.stop) {
+            return;
+        }
 
         while (this._lag > this.__MS_PER_UPDATE) {
             this._update();

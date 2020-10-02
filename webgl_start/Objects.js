@@ -83,7 +83,7 @@ class Player extends VariableObject {
     constructor() {
         super();
         this.scale = [5, gl.drawingBufferHeight/5];
-        this.speed = 5;
+        this.speed = 15;
     }
 
     _getDistanceFromBorder() {
@@ -175,17 +175,33 @@ class Ball extends VariableObject {
             this.reflect(AXIS.X);
             this._velocity = [2,3];
             this._bounces = 0;
+            if(this.position[AXIS.X] > 0) {
+                game.playerscore++;
+            } else {
+                game.enemyscore++;
+            }
             this._reset();
             //todo: add score for game
+            document.getElementById("statusBar").innerText = "Player: "+ game.playerscore + ", Enemy: " + game.enemyscore;
+            if(game.enemyscore === 3 || game.playerscore === 3) {
+                document.getElementById("title").innerText = "Game Over!";
+                game.stop = true;
+            }
         }
         if(this._collidesWithPlayer()) {
             this.reflect(AXIS.X);
-            if(this._bounces === 1) {
+            if(this._bounces === 3) {
                 this._velocity = [
                     this._clamp(this._velocity[0] * this._clamp(1+ Math.random(), 1.3), 10),
                     this._clamp(this._velocity[1] * this._clamp(1+ Math.random(), 1.3), 8)
                 ];
                 this._bounces = 0;
+                this.color = [
+                    Math.random(),
+                    Math.random(),
+                    Math.random(),
+                    1
+                ]
             }
             this._bounces++;
         }
@@ -219,9 +235,9 @@ class Ball extends VariableObject {
     _collidesWith(axis, object) {
         let objectSize = object.scale[axis]/2;
         // Checks the upper/right collisionbound
-        if(this.position[axis] - this.scale[axis]/2 < object.position[axis] + object.scale[axis]/2) {
+        if(this.position[axis] - this.scale[axis]/2 < object.position[axis] + objectSize) {
             // Check the lower/left collisionbound
-            if(this.position[axis] + this.scale[axis]/2 > object.position[axis] - object.scale[axis]/2) {
+            if(this.position[axis] + this.scale[axis]/2 > object.position[axis] - objectSize) {
                 return true;
             }
         }

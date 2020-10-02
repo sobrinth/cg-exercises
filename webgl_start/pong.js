@@ -1,7 +1,7 @@
 //
 // Computer Graphics
 //
-// WebGL Exercises
+// WebGL Exercises Dominik Baumann
 //
 
 // Register function to call after document has loaded
@@ -18,27 +18,6 @@ let ctx = {
     uModelMat: -1,
     uColor: -1
 };
-
-let key = {
-    _pressed: {},
-    LEFT: 37,
-    UP: 38,
-    RIGHT: 39,
-    DOWN: 40
-}
-
-function isDown(keycode) {
-    return key._pressed[keycode];
-}
-
-function onKeydown(event) {
-    key._pressed[event.keyCode] = true;
-    console.log("KeyPressed: " + event.keyCode)
-}
-
-function onKeyup(event) {
-    delete key._pressed[event.keyCode];
-}
 
 /**
  * Startup function to be called when the body is loaded
@@ -90,6 +69,9 @@ function setupWorldCoordinates() {
 
 
 function setupGame() {
+    document.getElementById("statusBar").innerText = "Player: 0, Enemy: 0";
+    document.getElementById("title").innerText = "Pong!";
+
     game = new Game();
     let middleBar = new VariableObject();
     middleBar.scale = [1, gl.drawingBufferHeight];
@@ -97,6 +79,8 @@ function setupGame() {
     game._draw();
 
 }
+
+// Used by button to start the game
 function startGame() {
     game.start();
 }
@@ -108,6 +92,7 @@ function setUpBuffers(){
 
     VariableObject.buffer = gl.createBuffer();
 
+    // The vertices used to draw all the rectangles
     let vertices = [
         -0.5, -0.5,
         0.5, -0.5,
