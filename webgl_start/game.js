@@ -6,7 +6,7 @@ class Game {
         this._enemy = new Enemy(this);
         this._ball = new Ball(this);
         // Frametime of the simulation -> 1000/FPS
-        this.__MS_PER_UPDATE = 20;
+        this.__MS_PER_UPDATE = 16;
         this._lag = 0.0;
         this._setup();
     }

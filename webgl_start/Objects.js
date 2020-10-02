@@ -140,11 +140,13 @@ class Enemy extends Player {
     constructor(game) {
         super();
         this._game = game;
+        // speed of the AI
+        this.speed = 10;
     }
     update() {
-        if(this._game._ball.position[AXIS.Y] > this.position[AXIS.Y]) {
+        if((this._game._ball.position[AXIS.Y] - this.position[AXIS.Y]) > 20) {
             this.moveUp();
-        } else if(this._game._ball.position[AXIS.Y] < this.position[AXIS.Y]) {
+        } else if((this._game._ball.position[AXIS.Y] - this.position[AXIS.Y]) < -20) {
             this.moveDown();
         }
     }
@@ -156,9 +158,8 @@ class Ball extends VariableObject {
         super();
         this.scale = [15,15];
         this._reset();
-        // make this random for starting
-        this._velocity = [2,3];
         this.game = game;
+        this._bounces = 0;
     }
 
     update() {
@@ -166,21 +167,39 @@ class Ball extends VariableObject {
             this._velocity[AXIS.X],
             this._velocity[AXIS.Y]
         ]);
+
         if(this._collidesWithTopOrBot()) {
             this.reflect(AXIS.Y);
         }
         if (this._collidesWithBackwall()) {
             this.reflect(AXIS.X);
+            this._velocity = [2,3];
+            this._bounces = 0;
             this._reset();
             //todo: add score for game
         }
         if(this._collidesWithPlayer()) {
             this.reflect(AXIS.X);
+            if(this._bounces === 1) {
+                this._velocity = [
+                    this._clamp(this._velocity[0] * this._clamp(1+ Math.random(), 1.3), 10),
+                    this._clamp(this._velocity[1] * this._clamp(1+ Math.random(), 1.3), 8)
+                ];
+                this._bounces = 0;
+            }
+            this._bounces++;
         }
     }
 
     _reset() {
         this.position = [0,0];
+        this._velocity = [
+            -3 + Math.floor(Math.random() * 7),
+            -3 + Math.floor(Math.random() * 7)
+        ];
+        if(this._velocity[0] === 0) {
+            this._velocity[0] = 1.5
+        }
     }
 
     _collidesWithTopOrBot() {
@@ -211,7 +230,7 @@ class Ball extends VariableObject {
 
     _collidesWithBackwall() {
         let collisionDistance = gl.drawingBufferWidth/2 - this.scale[AXIS.X]/2;
-        return this.position[AXIS.X] >= collisionDistance || this.position[AXIS.X] <= -collisionDistance;
+        return this.position[AXIS.X] >= (collisionDistance + 20) || this.position[AXIS.X] <= (-collisionDistance -20);
     }
 
     reflect(axis) {

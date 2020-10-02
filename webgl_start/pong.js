@@ -9,6 +9,7 @@ window.onload = startup;
 
 // the gl object is saved globally
 let gl;
+let game;
 
 // we keep all local parameters for the program in a single object
 let ctx = {
@@ -49,7 +50,7 @@ function startup() {
     initGL();
     window.addEventListener('keyup', onKeyup, false);
     window.addEventListener('keydown', onKeydown, false);
-    startGame();
+    setupGame();
 }
 
 /**
@@ -88,13 +89,15 @@ function setupWorldCoordinates() {
 }
 
 
-function startGame() {
-    let game = new Game();
-
+function setupGame() {
+    game = new Game();
     let middleBar = new VariableObject();
     middleBar.scale = [1, gl.drawingBufferHeight];
     game.addObject(middleBar);
+    game._draw();
 
+}
+function startGame() {
     game.start();
 }
 /**
