@@ -1584,7 +1584,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *     mat3.scale(dest, dest, vec);
 	 *
 	 * @param {mat3} out mat3 receiving operation result
-	 * @param {vec2} v Scaling vector
+	 * @param {number[]} v Scaling vector
 	 * @returns {mat3} out
 	 */
 	mat3.fromScaling = function(out, v) {

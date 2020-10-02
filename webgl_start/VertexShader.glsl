@@ -1,9 +1,8 @@
 attribute vec2 aVertexPosition;
-attribute vec2 aVertexTextureCoord;
 
-varying vec2 vTextureCoord;
+uniform mat3 uModelMat;
+uniform mat3 uProjMat;
 
 void main () {
-    gl_Position = vec4(aVertexPosition, 0, 1);
-    vTextureCoord = aVertexTextureCoord;
+    gl_Position = vec4(uProjMat * uModelMat * vec3(aVertexPosition, 1), 1);
 }
