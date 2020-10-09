@@ -141,12 +141,21 @@ class Enemy extends Player {
         super();
         this._game = game;
         // speed of the AI
-        this.speed = 10;
+        this.speed = 15;
     }
     update() {
-        if((this._game._ball.position[AXIS.Y] - this.position[AXIS.Y]) > 20) {
+        let nearestBallDistance = 1000;
+        let nearestBall = new Ball(game);
+        this._game._balls.forEach(o => {
+            if (this.position[AXIS.X] - o.position[AXIS.X] < nearestBallDistance) {
+                nearestBallDistance = this.position[AXIS.X] - o.position[AXIS.X];
+                nearestBall = o;
+            }
+        });
+
+        if((nearestBall.position[AXIS.Y] - this.position[AXIS.Y]) > 15) {
             this.moveUp();
-        } else if((this._game._ball.position[AXIS.Y] - this.position[AXIS.Y]) < -20) {
+        } else if((nearestBall.position[AXIS.Y] - this.position[AXIS.Y]) < -15) {
             this.moveDown();
         }
     }
@@ -159,7 +168,9 @@ class Ball extends VariableObject {
         this.scale = [15,15];
         this._reset();
         this.game = game;
-        this._bounces = 0;
+        this._bounces = 1;
+        this.primary = false;
+
     }
 
     update() {
@@ -174,13 +185,14 @@ class Ball extends VariableObject {
         if (this._collidesWithBackwall()) {
             this.reflect(AXIS.X);
             this._velocity = [2,3];
-            this._bounces = 0;
+            this._bounces = 1;
             if(this.position[AXIS.X] > 0) {
                 game.playerscore++;
             } else {
                 game.enemyscore++;
             }
             this._reset();
+            game.resetGame();
             //todo: add score for game
             document.getElementById("statusBar").innerText = "Player: "+ game.playerscore + ", Enemy: " + game.enemyscore;
             if(game.enemyscore === 3 || game.playerscore === 3) {
@@ -190,21 +202,31 @@ class Ball extends VariableObject {
         }
         if(this._collidesWithPlayer()) {
             this.reflect(AXIS.X);
-            if(this._bounces === 3) {
-                this._velocity = [
-                    this._clamp(this._velocity[0] * this._clamp(1+ Math.random(), 1.3), 10),
-                    this._clamp(this._velocity[1] * this._clamp(1+ Math.random(), 1.3), 8)
-                ];
-                this._bounces = 0;
-                this.color = [
-                    Math.random(),
-                    Math.random(),
-                    Math.random(),
-                    1
-                ]
+            if(this._bounces % 4 === 0) {
+                this.increaseVelocity();
+            }
+            if(this._bounces % 10 === 0) {
+                if(this.primary === true) {
+                    let newBall = new Ball(this.game);
+                    game.addObject(newBall);
+                    game._balls.push(newBall);
+                }
             }
             this._bounces++;
         }
+    }
+
+    increaseVelocity() {
+        this._velocity = [
+            this._clamp(this._velocity[0] * this._clamp(1+ Math.random(), 1.3), 10),
+            this._clamp(this._velocity[1] * this._clamp(1+ Math.random(), 1.3), 8)
+        ];
+        this.color = [
+            Math.random(),
+            Math.random(),
+            Math.random(),
+            1
+        ]
     }
 
     _reset() {

@@ -73,9 +73,6 @@ function setupGame() {
     document.getElementById("title").innerText = "Pong!";
 
     game = new Game();
-    let middleBar = new VariableObject();
-    middleBar.scale = [1, gl.drawingBufferHeight];
-    game.addObject(middleBar);
     game._draw();
 
 }

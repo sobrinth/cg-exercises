@@ -5,6 +5,7 @@ class Game {
         this._player = new Player();
         this._enemy = new Enemy(this);
         this._ball = new Ball(this);
+        this._balls = []
         this.playerscore = 0;
         this.enemyscore = 0;
         this.stop = false;
@@ -20,6 +21,11 @@ class Game {
         this._player._setLeft();
         this.addObject(this._player);
         this.addObject(this._ball);
+        this._ball.primary = true;
+        this._balls.push(this._ball);
+        let middleBar = new VariableObject();
+        middleBar.scale = [1, gl.drawingBufferHeight];
+        this.addObject(middleBar);
     }
 
     start() {
@@ -27,6 +33,12 @@ class Game {
             this._prevTime = timeStamp;
             this._gameloop(timeStamp);
         });
+    }
+
+    resetGame() {
+        this._balls = [];
+        this._objects = [];
+        this._setup();
     }
 
     /**
