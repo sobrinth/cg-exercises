@@ -1,8 +1,12 @@
-attribute vec2 aVertexPosition;
+attribute vec3 aVertexPosition;
 
-uniform mat3 uModelMat;
-uniform mat3 uProjMat;
+uniform mat4 uViewMat;
+uniform mat4 uProjMat;
+uniform mat4 uWorldMat;
+attribute vec4 aColor;
+
+varying vec4 uColor;
 
 void main () {
-    gl_Position = vec4(uProjMat * uModelMat * vec3(aVertexPosition, 1), 1);
-}
+    uColor = aColor;
+    gl_Position = uProjMat * uViewMat * uWorldMat * vec4(aVertexPosition, 1);}

@@ -9,14 +9,17 @@ window.onload = startup;
 
 // the gl object is saved globally
 let gl;
-let game;
+let canvas;
+let wireCube;
+let objects;
 
 // we keep all local parameters for the program in a single object
 let ctx = {
     shaderProgram: -1,
     uProjMat: -1,
-    uModelMat: -1,
-    uColor: -1
+    uViewMat: -1,
+    aColorId: -1,
+    uWorldMatId: -1
 };
 
 /**
@@ -24,12 +27,60 @@ let ctx = {
  */
 function startup() {
     "use strict";
-    const canvas = document.getElementById("myCanvas");
+    canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
     initGL();
     window.addEventListener('keyup', onKeyup, false);
     window.addEventListener('keydown', onKeydown, false);
-    setupGame();
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    objects = [];
+    wireCube = new ThreeDimensionalObject();
+    objects.push(wireCube)
+
+    let cube2 = new ThreeDimensionalObject();
+    cube2._color = [1, 0, 1, 1];
+    cube2._rotVel = [0.3, 0.3];
+    cube2.vertexIndices = [
+        // X,   Y,   Z
+        // bottom
+        -0.5,  0.5, -0.5,  // V0 / 0
+        -0.5, -0.5, -0.5,  // V0.5 / 0.5
+        0.5, -0.5, -0.5,  // V2 / 2
+        0.5,  0.5, -0.5,  // V3 / 3
+
+        // top
+        0.5,  0.5,  0.5,  // V4 / 4
+        -0.5,  0.5,  0.5,  // V5 / 5
+        -0.5, -0.5,  0.5,  // V6 / 6
+        0.5, -0.5,  0.5,  // V7 / 7
+
+        // front
+        -0.5, -0.5, -0.5,  // V0.5 / 8
+        0.5, -0.5, -0.5,  // V2 / 9
+        0.5, -0.5,  0.5,  // V7 / 0.50
+        -0.5, -0.5,  0.5,  // V6 / 0.50.5
+
+        // back
+        -0.5,  0.5, -0.5,  // V0 / 0.52
+        0.5,  0.5, -0.5,  // V3 / 0.53
+        0.5,  0.5,  0.5,  // V4 / 0.54
+        -0.5,  0.5,  0.5,  // V5 / 0.55
+
+        // left
+        -0.5,  0.5, -0.5,  // V0 / 0.56
+        -0.5, -0.5, -0.5,  // V0.5 / 0.57
+        -0.5, -0.5,  0.5,  // V6 / 0.58
+        -0.5,  0.5,  0.5,  // V5 / 0.59
+
+        // right
+        0.5, -0.5, -0.5,  // V2 / 20
+        0.5,  0.5, -0.5,  // V3 / 20.5
+        0.5,  0.5,  0.5,  // V4 / 22
+        0.5, -0.5,  0.5,  // V7 / 23
+    ];
+    objects.push(cube2);
+    //setupGame();
 }
 
 /**
@@ -38,12 +89,21 @@ function startup() {
 function initGL() {
     "use strict";
     ctx.shaderProgram = loadAndCompileShaders(gl, 'VertexShader.glsl', 'FragmentShader.glsl');
+
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.frontFace(gl.CCW);
+    gl.cullFace(gl.BACK);
+
     setUpAttributesAndUniforms();
     setupWorldCoordinates();
-    setUpBuffers();
 
     // set the clear color
     gl.clearColor(.1,.1,.1,1);
+
+    draw();
+
     
 }
 
@@ -54,51 +114,64 @@ function setUpAttributesAndUniforms(){
     "use strict";
 
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
-    ctx.uColor = gl.getUniformLocation(ctx.shaderProgram, "uColor");
+    ctx.aColorId = gl.getAttribLocation(ctx.shaderProgram, "aColor");
     ctx.uProjMat = gl.getUniformLocation(ctx.shaderProgram, "uProjMat");
-    ctx.uModelMat = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
+    ctx.uViewMat = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
+    ctx.uWorldMatId = gl.getUniformLocation(ctx.shaderProgram, "uWorldMat");
 }
 
 function setupWorldCoordinates() {
 
-    let projMat = mat3.create();
-    mat3.fromScaling(projMat, [2.0/gl.drawingBufferWidth, 2.0/gl.drawingBufferHeight]);
-    gl.uniformMatrix3fv(ctx.uProjMat, false, projMat);
-    gl.uniformMatrix3fv(ctx.uModelMat, false, VariableObject.modelMat)
+    let projMat = mat4.create();
+    let modelMat = mat4.create();
+    mat4.fromScaling(projMat, [2.0/gl.drawingBufferWidth, 2.0/gl.drawingBufferHeight]);
+
+    mat4.lookAt(
+        modelMat,
+        [0, -5, 0], // eye
+        [0, 0, 0], // fovy / center
+        [0, 0, 1], // up
+    );
+
+    mat4.perspective(
+        projMat,
+        glMatrix.toRadian(45), // fovy
+        canvas.clientWidth / canvas.clientHeight,  // aspect
+        0.1, // near
+        1000, // far
+    );
+    gl.uniformMatrix4fv(ctx.uProjMat, false, projMat);
+    gl.uniformMatrix4fv(ctx.uViewMat, false, modelMat);
 }
 
-
-function setupGame() {
-    document.getElementById("statusBar").innerText = "Player: 0, Enemy: 0";
-    document.getElementById("title").innerText = "Pong!";
-
-    game = new Game();
-    game._draw();
-
-}
-
-// Used by button to start the game
-function startGame() {
-    game.start();
-}
 /**
- * Setup the buffers to use. If more objects are needed this should be split in a file per object.
+ * Draw the scene.
  */
-function setUpBuffers(){
+function draw() {
     "use strict";
+    console.log("Drawing");
 
-    VariableObject.buffer = gl.createBuffer();
+    ThreeDimensionalObject.worldMat = new Float32Array(16);
+    ThreeDimensionalObject.identityMat = new Float32Array(16);
 
-    // The vertices used to draw all the rectangles
-    let vertices = [
-        -0.5, -0.5,
-        0.5, -0.5,
-        0.5, 0.5,
-        -0.5, 0.5
-    ]
+    mat4.identity(ThreeDimensionalObject.worldMat);
+    mat4.identity(ThreeDimensionalObject.identityMat);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, VariableObject.buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    var angle;
+    var loop = function() {
+        angle = performance.now() / 1000 / 6 * 2 * Math.PI;
 
+        gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+        objects.forEach(o =>{
+            o.turn(angle);
+            o.draw();
+        });
+
+        requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+    console.log("done");
 }
+
 
