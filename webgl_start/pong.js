@@ -35,52 +35,11 @@ function startup() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     objects = [];
-    wireCube = new ThreeDimensionalObject();
-    objects.push(wireCube)
+    //wireCube = new ThreeDimensionalObject();
+    //objects.push(wireCube)
+    let solidCube = new Solid3DObject();
+    objects.push(solidCube);
 
-    let cube2 = new ThreeDimensionalObject();
-    cube2._color = [1, 0, 1, 1];
-    cube2._rotVel = [0.3, 0.3];
-    cube2.vertexIndices = [
-        // X,   Y,   Z
-        // bottom
-        -0.5,  0.5, -0.5,  // V0 / 0
-        -0.5, -0.5, -0.5,  // V0.5 / 0.5
-        0.5, -0.5, -0.5,  // V2 / 2
-        0.5,  0.5, -0.5,  // V3 / 3
-
-        // top
-        0.5,  0.5,  0.5,  // V4 / 4
-        -0.5,  0.5,  0.5,  // V5 / 5
-        -0.5, -0.5,  0.5,  // V6 / 6
-        0.5, -0.5,  0.5,  // V7 / 7
-
-        // front
-        -0.5, -0.5, -0.5,  // V0.5 / 8
-        0.5, -0.5, -0.5,  // V2 / 9
-        0.5, -0.5,  0.5,  // V7 / 0.50
-        -0.5, -0.5,  0.5,  // V6 / 0.50.5
-
-        // back
-        -0.5,  0.5, -0.5,  // V0 / 0.52
-        0.5,  0.5, -0.5,  // V3 / 0.53
-        0.5,  0.5,  0.5,  // V4 / 0.54
-        -0.5,  0.5,  0.5,  // V5 / 0.55
-
-        // left
-        -0.5,  0.5, -0.5,  // V0 / 0.56
-        -0.5, -0.5, -0.5,  // V0.5 / 0.57
-        -0.5, -0.5,  0.5,  // V6 / 0.58
-        -0.5,  0.5,  0.5,  // V5 / 0.59
-
-        // right
-        0.5, -0.5, -0.5,  // V2 / 20
-        0.5,  0.5, -0.5,  // V3 / 20.5
-        0.5,  0.5,  0.5,  // V4 / 22
-        0.5, -0.5,  0.5,  // V7 / 23
-    ];
-    objects.push(cube2);
-    //setupGame();
 }
 
 /**
@@ -151,11 +110,11 @@ function draw() {
     "use strict";
     console.log("Drawing");
 
-    ThreeDimensionalObject.worldMat = new Float32Array(16);
-    ThreeDimensionalObject.identityMat = new Float32Array(16);
+    WireFrame3DObject.worldMat = new Float32Array(16);
+    WireFrame3DObject.identityMat = new Float32Array(16);
 
-    mat4.identity(ThreeDimensionalObject.worldMat);
-    mat4.identity(ThreeDimensionalObject.identityMat);
+    mat4.identity(WireFrame3DObject.worldMat);
+    mat4.identity(WireFrame3DObject.identityMat);
 
     var angle;
     var loop = function() {
