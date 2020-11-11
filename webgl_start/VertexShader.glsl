@@ -1,12 +1,31 @@
 attribute vec3 aVertexPosition;
+attribute vec3 aVertexColor;
+attribute vec3 aVertexNormal;
+attribute vec2 aVertexTextureCoord;
 
-uniform mat4 uViewMat;
-uniform mat4 uProjMat;
-uniform mat4 uWorldMat;
-attribute vec4 aColor;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat3 uNormalMatrix;
 
-varying vec4 uColor;
+varying vec3 vColor;
+varying vec2 vTextureCoord;
+varying vec3 vNormalEye;
+varying vec3 vVertexPositionEye3;
 
-void main () {
-    uColor = aColor;
-    gl_Position = uProjMat * uViewMat * uWorldMat * vec4(aVertexPosition, 1);}
+void main() {
+    // calculate the vertex position in eye Coordinate
+    vec4 vertexPositionEye4 = uModelViewMatrix  * vec4(aVertexPosition, 1.0);
+    vVertexPositionEye3 = vertexPositionEye4.xyz / vertexPositionEye4.w;
+
+    // calculate the normal vector in eye coordinates
+    vNormalEye = normalize(uNormalMatrix * aVertexNormal);
+
+    // transform and calculate texture coordinates
+    vTextureCoord = aVertexTextureCoord;
+
+    // set color for fragment shaded
+    vColor = aVertexColor;
+
+    // calculate the projected position
+    gl_Position = uProjectionMatrix * vertexPositionEye4;
+}
